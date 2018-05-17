@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ $# -eq 0 ] ; then
+	echo "[ERROR] No container id provided"
+	exit 1
+fi
+
+# sudo if not running as root already
+[ "$UID" -eq 0 ] || exec sudo bash "$0" "$@"
+
+docker_path=/proc/$(docker inspect --format {{.State.Pid}} $1)/root
+echo $docker_path
