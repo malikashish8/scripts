@@ -1,0 +1,148 @@
+#!/bin/bash
+
+MYPROXY=http://localhost:3128/
+
+# get value of proxy if set in environment or use MYPROXY
+export pr0xy=${http_proxy:-"$MYPROXY"}
+
+# simple function to check if executable exists
+exists() {
+	command -v "$1" >/dev/null 2>&1
+}
+
+if [[ "$1" == 'rootdisable' ]]; then
+	echo "Disabling proxy at system level"
+
+	# Unset all environment variables with proxy in /etc/environment
+	if [[ -f /etc/environment ]]; then
+		echo "System - /etc/environment"
+		cat /etc/environment | grep -iv "^[^#].*proxy.*=.*" > /etc/environment.bak
+		mv /etc/environment.bak /etc/environment
+	fi
+
+	# TODO: Docker has user specific internal subnets
+	# Docker service remove proxy
+	if [[ -f /etc/systemd/system/docker.service.d/http-proxy.conf ]]; then
+		echo "Docker - service"
+		mv /etc/systemd/system/docker.service.d/http-proxy.conf /etc/systemd/system/docker.service.d/http-proxy.conf.dis
+		systemctl daemon-reload
+		systemctl restart docker
+	fi
+
+	# Remove proxy for apt
+	if [[ -f /etc/apt/apt.conf ]]; then
+		echo "System - apt"
+		cat /etc/apt/apt.conf | grep -iv "^[\s]*Acquire.*proxy.*" > /etc/apt/apt.conf.bak
+		mv /etc/apt/apt.conf.bak /etc/apt/apt.conf
+	fi
+elif [[ "$1" == 'rootenable' ]]; then
+	echo "Enabling proxy at system level"
+
+	# Set proxy in /etc/environment
+	if [[ -f /etc/environment ]]; then
+		echo "System - /etc/environment"
+		echo "http_proxy=\"$2\"" >> /etc/environment
+		echo "https_proxy=\"$2\"" >> /etc/environment
+	fi
+
+	# Set proxy for docker service
+	if [[ -f /etc/systemd/system/docker.service.d/http-proxy.conf.dis ]]; then
+		echo "Docker - service"
+		mv /etc/systemd/system/docker.service.d/http-proxy.conf.dis /etc/systemd/system/docker.service.d/http-proxy.conf
+		systemctl daemon-reload
+		systemctl restart docker
+	fi
+
+	# Set proxy for apt
+	if [[ -f /etc/apt/apt.conf ]]; then
+		echo "System - apt"
+		echo "Acquire::http::proxy \"$2\";" >> /etc/apt/apt.conf
+		echo "Acquire::https::proxy \"$2\";" >> /etc/apt/apt.conf
+	fi
+# Check if proxy is enabled
+elif [[ $(env | cut -d= -f1 | grep -i proxy | wc -l) -gt 0 ]]; then
+	echo "Disabling proxy at user level"
+
+	# Unset all environment variables with proxy in them for current shell
+	while read var; do unset $var; done < <(env | cut -d= -f1 | grep -i proxy)
+
+	# Remove proxy config from .bashrc
+	if [[ -f ~/.bashrc ]]; then
+		echo "User - ~/.bashrc"
+		cat ~/.bashrc | grep -iv "^[\s]*export.*proxy.*" > ~/.bashrc.bak
+		mv ~/.bashrc.bak ~/.bashrc
+	fi
+	
+	# Remove user specific proxy for docker containers
+	if [[ -f ~/.docker/config.json ]]; then
+		echo "Docker - ~/.docker/config.json"
+		cat ~/.docker/config.json | jq 'del(.proxies)' > ~/.docker/config.json.bak
+		mv ~/.docker/config.json.bak ~/.docker/config.json
+	fi
+
+	# If npm exists remove proxy configurations
+	if exists npm; then
+		echo "Npm - config"
+		npm config rm proxy
+		npm config rm https-proxy
+	fi
+
+	# If git exists remove proxy configurations
+	if exists git; then
+		echo "Git - config"
+		git config --global --unset http.proxy
+	fi
+
+	# identify user shell
+	myshell=$(getent passwd "$(whoami)" | cut -d: -f7)
+
+	# disable system level proxy
+	sudo "$myshell" "$0" "rootdisable"
+
+	# run a new shell - script cannot unset env vars in current shell
+	echo "running new shell"
+	${myshell}
+else
+	echo "Enabling proxy at user level"
+
+	# Set proxy config in .bashrc
+	if [[ -f ~/.bashrc ]]; then
+		echo "User - ~/.bashrc"
+		echo "export http_proxy=${pr0xy}" >> ~/.bashrc
+		echo "export https_proxy=${pr0xy}" >> ~/.bashrc
+	fi
+
+	# Set user specific proxy for docker containers
+	if [[ -f ~/.docker/config.json ]]; then
+		echo "User - ~/.docker/config.json"
+		temp=$(mktemp -d)
+		echo "{\"proxies\": {\"default\": {\"httpProxy\": \"${pr0xy}\",\
+			\"httpsProxy\": \"${pr0xy}\"}}}" > ${temp}/proxy.json
+		jq -s add ~/.docker/config.json ${temp}/proxy.json > ${temp}/docker.json
+		mv ${temp}/docker.json ~/.docker/config.json
+		rm -r ${temp}
+	fi
+
+	# If npm exists set npm proxy
+	if exists npm; then
+		echo "Npm - config"
+		npm config set proxy "${pr0xy}"
+		npm config set https-proxy "${pr0xy}"
+	fi
+
+	# If git exists set git proxy
+	if exists git; then
+		echo "Git - config"
+		git config --global http.proxy ${pr0xy}
+	fi
+
+	# identify user shell
+	myshell=$(getent passwd "$(whoami)" | cut -d: -f7)
+
+	# configure system level proxy
+	sudo "$myshell" "$0" "rootenable" "${pr0xy}"
+
+	# run a new shell - script cannot unset env vars in current shell
+	echo "running new shell"
+	${myshell}
+fi
