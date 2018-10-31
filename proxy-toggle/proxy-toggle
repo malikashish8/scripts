@@ -90,7 +90,7 @@ elif [[ $(env | cut -d= -f1 | grep -i proxy | wc -l) -gt 0 ]]; then
 	# If git exists remove proxy configurations
 	if exists git; then
 		echo "Git - config"
-		git config --global --unset http.proxy
+		git config --global --unset http
 	fi
 
 	# identify user shell
