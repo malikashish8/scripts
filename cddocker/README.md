@@ -19,7 +19,7 @@ Run the following commands to install cddocker in /usr/bin and execute it direct
 ```bash
 cd /tmp
 git clone https://github.com/malikashish8/scripts.git
-sudo mv scripts/cddocker/cddocker /usr/bin/cddocker
+sudo cp -f scripts/cddocker/cddocker /usr/bin/cddocker
 sudo chmod a+x /usr/bin/cddocker
 ```
 
