@@ -1,0 +1,11 @@
+title: scripts
+jekyll.environment: "production"
+baseurl: "/scripts"
+
+# Build settings
+markdown: kramdown
+theme: minima
+exclude:
+  - vendor
+  - Gemfile
+  - Gemfile.lock
