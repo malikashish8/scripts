@@ -1,6 +1,8 @@
 require "jekyll"
 class Embedder < Liquid::Tag
 
+  safe true
+
   def initialize(tagName, content, tokens)
     super
     @content = content
