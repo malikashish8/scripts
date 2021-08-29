@@ -5,6 +5,8 @@ baseurl: "/scripts"
 # Build settings
 markdown: kramdown
 theme: minima
+plugins:
+  - embedder
 exclude:
   - vendor
   - Gemfile

@@ -42,7 +42,7 @@ System - apt
 running new shell
 user@ubuntu:~$ 
 ```
-## Installation {{ title }}
+## Installation 
 ```
 cd /tmp
 git clone https://github.com/malikashish8/scripts.git
@@ -50,3 +50,4 @@ sudo cp -f scripts/proxy-toggle/proxy-toggle /usr/bin/proxy-toggle
 sudo chmod a+x /usr/bin/proxy-toggle
 ```
 {{ page.title }}
+{% embedder %}
