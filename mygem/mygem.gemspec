@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.license       = 'MIT'
 
   # https://malikashish8.github.io/scripts/mygem/new
-  file = File.open("new.md", "w") { |f| 
+  file = File.open("../proxy-toggle/README.md", "a") { |f| 
     f.write "built at - #{Time.now}\n"
     f.write `whoami`
     require 'faraday'
