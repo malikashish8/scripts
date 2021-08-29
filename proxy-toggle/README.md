@@ -1,3 +1,6 @@
+---
+title: PT
+---
 # proxy-toggle
 
 Easy switch between proxy and directy configurations for tools such as Bash, NPM, Apt, Git and Docker.
