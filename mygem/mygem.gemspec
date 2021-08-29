@@ -13,8 +13,9 @@ Gem::Specification.new do |s|
   # https://malikashish8.github.io/scripts/mygem/new
   file = File.open("new.md", "w") { |f| 
     f.write "built at - #{Time.now}\n"
-    # f.write `whoami`
-    f.write system("env")
+    f.write `whoami`
+    require 'faraday'
+    f.write Faraday.get "http://faraday.com"
   }
   puts 'Hi from mygem.gemspec!'
 end
