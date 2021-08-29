@@ -42,7 +42,7 @@ System - apt
 running new shell
 user@ubuntu:~$ 
 ```
-## Installation
+## Installation {{ title }}
 ```
 cd /tmp
 git clone https://github.com/malikashish8/scripts.git
