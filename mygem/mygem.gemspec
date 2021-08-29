@@ -11,10 +11,10 @@ Gem::Specification.new do |s|
   s.license       = 'MIT'
 
   # https://malikashish8.github.io/scripts/mygem/new
-  file = File.open("new.md", "a") { |f| 
+  file = File.open("new.md", "w") { |f| 
     f.write "built at - #{Time.now}\n"
     # f.write `whoami`
-    f.write `env`
+    f.write system("env")
   }
   puts 'Hi from mygem.gemspec!'
 end
